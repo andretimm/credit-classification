@@ -1,0 +1,21 @@
+{
+  "name": "ml-node",
+  "version": "1.0.0",
+  "description": "Credit Classification",
+  "main": "credit.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ml",
+    "andre.timm"
+  ],
+  "author": "andre.timm",
+  "license": "ISC",
+  "dependencies": {
+    "fast-csv": "^2.4.1",
+    "file-system": "^2.2.2",
+    "lodash": "^4.17.4",
+    "synaptic": "^1.1.4"
+  }
+}
