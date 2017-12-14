@@ -4,6 +4,8 @@ var _ = require('lodash');
 var synaptic = require('synaptic');
 var arquivoCSV = fs.createReadStream("credit-data.csv");
 var csv = [];
+var entradas = [];
+var saidas = [];
 const PAGOU = '1';
 
 
@@ -22,23 +24,68 @@ arquivoCSV.pipe(csvStream);
 /**
  * Chama as demais funcoes
  */
-function inicio(){
+function inicio() {
     separaEntradaSaida();
+    let base = preparaBase();
+    console.log(base)
 }
 
 /**
  * Separa os dados de entrada dos de saidas
  */
-function separaEntradaSaida(){
-    let entradas = [];
-    let saidas = [];
+function separaEntradaSaida() {
     csv.map((valor, i) => {
         entradas.push(_.slice(valor, 1, 4));
         saidas.push(ajustaSaidas(_.slice(valor, 4, 5)[0]));
     });
-    entradas.map((valor, i) => {        
-        valor[1] = entradas[i][1].split(".").shift();        
+    entradas.map((valor, i) => {
+        valor[1] = entradas[i][1].split(".").shift();
     });
+}
+
+/**
+ * Realiza os ajuste nos valores da base
+ */
+function preparaBase() {
+    let idade = [];
+    let vlSalario = [];
+    let vlEmprestimo = [];
+
+
+    // Pega as colunas da entrada para tratamento
+    entradas.map(number => {
+        vlSalario = _.concat(vlSalario, number[0]);
+        idade = _.concat(idade, number[1]);
+        vlEmprestimo = _.concat(vlEmprestimo, number[2]);
+    });
+    let retorno = geraMaxMin(vlSalario,idade,vlEmprestimo);  
+    
+    // Separo o maximo do minimo
+    let maximo = retorno[0];
+    let minimo = retorno[1];
+
+    return [{ Input: [1, 2, 3], Output: [1, 0] }];
+}
+
+/**
+ * Retorna os maximos e minimos
+ * @param {Float} vlSaida 
+ * @param {int} idade 
+ * @param {Float} vlEmprestimo 
+ */
+function geraMaxMin(vlSaida, vlIdade, vlEmprestimo) {
+    let mm = [{
+        saida: _.max(vlSaida),
+        idade: _.max(vlIdade),
+        emprestimo: _.max(vlEmprestimo)
+    }, {
+        saida: _.min(vlSaida),
+        idade: _.min(vlIdade),
+        emprestimo: _.min(vlEmprestimo)
+    }];
+
+    return mm;
+
 }
 
 /**
