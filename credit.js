@@ -26,8 +26,34 @@ arquivoCSV.pipe(csvStream);
  */
 function inicio() {
     separaEntradaSaida();
-    let base = preparaBase();
-    console.log(base)
+    let base = preparaBase();   
+    treinaRede(base);
+}
+
+/**
+ * Realiza o treinamento da rede
+ * @param {*} base 
+ */
+function treinaRede(base) {
+    // Cria perceptron com 3 entradas, 6 neuronios na camada oculta e 2 saidas
+    let network = new synaptic.Architect.Perceptron(3, 6, 2);
+    // Instancia o objeto para realizar o treinamento
+    let trainer = new synaptic.Trainer(network);
+
+    /**
+     * Configura para treinar
+     * Taxa de aprendizagem : 0.003
+     * Epocas: 1000000
+     * Taxa Erro : 0.01%
+     */
+    trainer.train(base, {
+        rate: 0.003,
+        iterations: 1000000,
+        error: 0.0001,
+        shuffle: false,
+        log: 1000,
+        cost: synaptic.Trainer.cost.CROSS_BINARY
+    });
 }
 
 /**
@@ -58,7 +84,7 @@ function preparaBase() {
         idade = _.concat(idade, number[1]);
         vlEmprestimo = _.concat(vlEmprestimo, number[2]);
     });
-    let retorno = geraMaxMin(vlSalario,idade,vlEmprestimo);  
+    let retorno = geraMaxMin(vlSalario, idade, vlEmprestimo);
 
     // Separo o maximo do minimo
     let maximo = retorno[0];
@@ -69,8 +95,8 @@ function preparaBase() {
     idade = ajusteEscala(idade, maximo.idade, minimo.idade);
     vlEmprestimo = ajusteEscala(vlEmprestimo, maximo.emprestimo, minimo.emprestimo);
 
-     // Coloca as colunas ajustadas na variavel de entrada, e ja realizar o input dos dados
-     entradas.map((valor, index) => {
+    // Coloca as colunas ajustadas na variavel de entrada, e ja realizar o input dos dados
+    entradas.map((valor, index) => {
         valor[0] = vlSalario[index];
         valor[1] = idade[index];
         valor[2] = vlEmprestimo[index];
