@@ -59,33 +59,37 @@ function preparaBase() {
         vlEmprestimo = _.concat(vlEmprestimo, number[2]);
     });
     let retorno = geraMaxMin(vlSalario,idade,vlEmprestimo);  
-    
+
     // Separo o maximo do minimo
     let maximo = retorno[0];
     let minimo = retorno[1];
+
+    // Realiza o ajuste de escala
+    vlSalario = ajusteEscala(vlSalario, maximo.salario, minimo.salario);
+    idade = ajusteEscala(idade, maximo.idade, minimo.idade);
+    vlEmprestimo = ajusteEscala(vlEmprestimo, maximo.emprestimo, minimo.emprestimo);
 
     return [{ Input: [1, 2, 3], Output: [1, 0] }];
 }
 
 /**
  * Retorna os maximos e minimos
- * @param {Float} vlSaida 
- * @param {int} idade 
+ * @param {Float} vlSalario 
+ * @param {int} vlIdade 
  * @param {Float} vlEmprestimo 
  */
-function geraMaxMin(vlSaida, vlIdade, vlEmprestimo) {
+function geraMaxMin(vlSalario, vlIdade, vlEmprestimo) {
     let mm = [{
-        saida: _.max(vlSaida),
+        salario: _.max(vlSalario),
         idade: _.max(vlIdade),
         emprestimo: _.max(vlEmprestimo)
     }, {
-        saida: _.min(vlSaida),
+        salario: _.min(vlSalario),
         idade: _.min(vlIdade),
         emprestimo: _.min(vlEmprestimo)
     }];
 
     return mm;
-
 }
 
 /**
@@ -100,4 +104,18 @@ function ajustaSaidas(vlSaida) {
     } else {
         return [0, 1];
     }
+}
+
+/**
+ * Retorna a coluna com o ajuste de escalas para nao haver informação com peso maior
+ * @param {Float} coluna 
+ * @param {Float} max 
+ * @param {Float} min 
+ */
+function ajusteEscala(coluna, max, min) {
+    let novaColuna = [];
+    for (var i = 0; i < coluna.length; i++) {
+        novaColuna[i] = (coluna[i] - min) / (max - min);
+    }
+    return novaColuna;
 }
