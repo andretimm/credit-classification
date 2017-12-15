@@ -50,7 +50,7 @@ function preparaBase() {
     let idade = [];
     let vlSalario = [];
     let vlEmprestimo = [];
-
+    let base = [];
 
     // Pega as colunas da entrada para tratamento
     entradas.map(number => {
@@ -69,7 +69,19 @@ function preparaBase() {
     idade = ajusteEscala(idade, maximo.idade, minimo.idade);
     vlEmprestimo = ajusteEscala(vlEmprestimo, maximo.emprestimo, minimo.emprestimo);
 
-    return [{ Input: [1, 2, 3], Output: [1, 0] }];
+     // Coloca as colunas ajustadas na variavel de entrada, e ja realizar o input dos dados
+     entradas.map((valor, index) => {
+        valor[0] = vlSalario[index];
+        valor[1] = idade[index];
+        valor[2] = vlEmprestimo[index];
+        // Cria var base para treinamento com entradas x saidas
+        base.push({
+            input: valor,
+            output: saidas[index]
+        });
+    });
+
+    return base;
 }
 
 /**
