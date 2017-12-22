@@ -49,11 +49,11 @@ function treinaRede(base) {
      * Taxa Erro : 0.01%
      */
     trainer.train(base, {
-        rate: 0.003,
+        rate: 0.001,
         iterations: 1000000,
         error: 0.0001,
         shuffle: false,
-        log: 10000,
+        log: 5000,
         cost: synaptic.Trainer.cost.CROSS_BINARY
     });
     console.log("================== Rede Treinada ==================");
