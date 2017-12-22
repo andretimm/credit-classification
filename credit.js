@@ -3,11 +3,13 @@ var fastCsv = require("fast-csv");
 var _ = require('lodash');
 var synaptic = require('synaptic');
 var arquivoCSV = fs.createReadStream("credit-data.csv");
+var arquivoCSVTeste = fs.createReadStream("credit-teste.csv");
 var csv = [];
+var csvTeste = [];
 var entradas = [];
 var saidas = [];
+var retorno = [];
 const PAGOU = '1';
-
 
 /**
  * Ler o csv com o dados
@@ -26,7 +28,7 @@ arquivoCSV.pipe(csvStream);
  */
 function inicio() {
     separaEntradaSaida();
-    let base = preparaBase();   
+    let base = preparaBase();
     treinaRede(base);
 }
 
@@ -51,9 +53,45 @@ function treinaRede(base) {
         iterations: 1000000,
         error: 0.0001,
         shuffle: false,
-        log: 1000,
+        log: 10000,
         cost: synaptic.Trainer.cost.CROSS_BINARY
     });
+    console.log("================== Rede Treinada ==================");
+    console.log("================== Iniciando teste ==================");
+    teste(network);
+    console.log("================== Fim teste ==================");
+}
+
+/**
+ * Realiza o teste com dados que a base não conhece
+ * @param {Network} rede 
+ */
+function teste(rede) {
+    entradas = [];
+    saidas = [];
+
+    /**
+     * Ler o csv com o dados de teste
+     */   
+    let csvStreamTeste = fastCsv.parse().on("data", function (data) {
+        csvTeste.push(data[0].split(";"));
+    }).on("end", function () {
+        separaEntradaSaidaTeste();
+        preparaBaseTeste();
+        let acertos = 0;
+        entradas.map((valor, index) => {           
+            let resultadoTeste = rede.activate(valor);
+            if(saidas[index][0] === 1){
+                acertos += resultadoTeste[0] > 0.75 ? 1 : 0
+            }else{
+                 acertos += resultadoTeste[1] > 0.75 ? 1 : 0
+            }
+        });
+        let taxa = (acertos * 100) / entradas.length;
+        console.log(` Total de acertos : ${acertos} \n Total de registro de teste : ${entradas.length} \n Taxa : ${taxa.toFixed(2)}%`);
+        
+    });
+    arquivoCSVTeste.pipe(csvStreamTeste);
 }
 
 /**
@@ -61,6 +99,19 @@ function treinaRede(base) {
  */
 function separaEntradaSaida() {
     csv.map((valor, i) => {
+        entradas.push(_.slice(valor, 1, 4));
+        saidas.push(ajustaSaidas(_.slice(valor, 4, 5)[0]));
+    });
+    entradas.map((valor, i) => {
+        valor[1] = entradas[i][1].split(".").shift();
+    });
+}
+
+/**
+ * Separa os dados de entrada dos de saidas
+ */
+function separaEntradaSaidaTeste() {
+    csvTeste.map((valor, i) => {
         entradas.push(_.slice(valor, 1, 4));
         saidas.push(ajustaSaidas(_.slice(valor, 4, 5)[0]));
     });
@@ -84,7 +135,7 @@ function preparaBase() {
         idade = _.concat(idade, number[1]);
         vlEmprestimo = _.concat(vlEmprestimo, number[2]);
     });
-    let retorno = geraMaxMin(vlSalario, idade, vlEmprestimo);
+    retorno = geraMaxMin(vlSalario, idade, vlEmprestimo);
 
     // Separo o maximo do minimo
     let maximo = retorno[0];
@@ -108,6 +159,39 @@ function preparaBase() {
     });
 
     return base;
+}
+
+/**
+ * Realiza os ajuste nos valores da base de teste
+ */
+function preparaBaseTeste() {
+    let idade = [];
+    let vlSalario = [];
+    let vlEmprestimo = [];
+
+    // Pega as colunas da entrada para tratamento
+    entradas.map(number => {
+        vlSalario = _.concat(vlSalario, number[0]);
+        idade = _.concat(idade, number[1]);
+        vlEmprestimo = _.concat(vlEmprestimo, number[2]);
+    });
+
+    // Separo o maximo do minimo
+    let maximo = retorno[0];
+    let minimo = retorno[1];
+
+    // Realiza o ajuste de escala
+    vlSalario = ajusteEscala(vlSalario, maximo.salario, minimo.salario);
+    idade = ajusteEscala(idade, maximo.idade, minimo.idade);
+    vlEmprestimo = ajusteEscala(vlEmprestimo, maximo.emprestimo, minimo.emprestimo);
+
+    // Coloca as colunas ajustadas na variavel de entrada, e ja realizar o input dos dados
+    entradas.map((valor, index) => {
+        valor[0] = vlSalario[index];
+        valor[1] = idade[index];
+        valor[2] = vlEmprestimo[index];
+    });
+
 }
 
 /**
